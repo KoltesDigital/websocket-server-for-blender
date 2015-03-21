@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Blender client</title>
+		<script src="blender-websocket.js"></script>
+	</head>
+	<body>
+		<form name="wsForm">
+			<div>
+				<input name="url" value="ws://localhost:8137"></textarea>
+			</div>
+			<div>
+				<input type="button" name=disconnectButton value="Disconnect" onClick="disconnect();">
+				<input type="button" name=connectButton value="Connect" onClick="connect();">
+			</div>
+		</form>
+		<pre id="data"></pre>
+		<pre id="scenes"></pre>
+		<pre id="context"></pre>
+		<script>
+blender = new BlenderWebSocket();
+blender.setAxes("xzY");
+
+blender.addListener("open", onOpen);
+blender.addListener("close", onClose);
+blender.addListener("error", onError);
+blender.addListener("data", function(data, diff) {
+	document.getElementById("data").innerHTML = JSON.stringify(data, null, 2);
+});
+blender.addListener("scene", function() {
+	document.getElementById("scenes").innerHTML = JSON.stringify(blender.scenes, null, 2);
+});
+blender.addListener("context", function(context) {
+	document.getElementById("context").innerHTML = JSON.stringify(context, null, 2);
+});
+
+function connect() {
+	blender.open({
+		url: document.wsForm.url.value
+	})
+}
+
+function disconnect() {
+	blender.close();
+}
+
+function onOpen(app) {
+	console.log("Connected", app);
+	document.wsForm.connectButton.disabled = true;
+	document.wsForm.disconnectButton.disabled = false;
+}
+
+function onClose() {
+	console.log("Disconnected");
+	document.wsForm.connectButton.disabled = false;
+	document.wsForm.disconnectButton.disabled = true;
+}
+
+function onError(evt) {
+	console.error(evt);
+	blender.close();
+	document.wsForm.connectButton.disabled = false;
+	document.wsForm.disconnectButton.disabled = true;
+}
+
+document.wsForm.disconnectButton.disabled = true;
+	</script>
+	</body>
+</html> 
+
